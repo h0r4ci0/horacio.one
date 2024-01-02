@@ -257,7 +257,7 @@
     }
   }
 
-  &__content {
+  &__aboutme {
     padding-top: 24rem;
     padding-bottom: 24rem;
     @extend %padding-home;
@@ -300,7 +300,57 @@
 
         @media (any-pointer: fine) {
           &:hover {
-            color: $col-orange;
+            color: $col-red;
+          }
+        }
+      }
+    }
+  }
+
+  &__content {
+    //padding-top: 24rem;
+    //padding-bottom: 24rem;
+    @extend %padding-home;
+
+    @include media("<=phone") {
+      padding-top: 16rem;
+      padding-bottom: 16rem;
+    }
+
+    @include media(">tablet") {
+      text-align: center;
+    }
+
+    &__title {
+      @extend %description-12;
+      text-transform: uppercase;
+      color: $col-boulder;
+      margin-bottom: 2.4rem;
+    }
+
+    &__desc {
+      @extend %description-32;
+      max-width: 95rem;
+      width: 100%;
+      @extend %links;
+
+      @include media(">tablet") {
+        margin: 0 auto;
+      }
+
+      .contact-scroll {
+        color: $col-boulder;
+        transition: color 0.3s;
+        background: transparent;
+        border: 0;
+        padding: 0;
+        @extend %description-32;
+        font-weight: 500;
+        cursor: pointer;
+
+        @media (any-pointer: fine) {
+          &:hover {
+            color: $col-red;
           }
         }
       }
@@ -357,12 +407,11 @@
     margin-left: auto;
     margin-right: auto;
     padding-top: 9.6rem;
-    padding-bottom: 9.6rem;
 
     @include media(">tablet") {
       display: flex;
-      padding-top: 24rem;
-      padding-bottom: 24rem;
+      padding-top: 16rem;
+      padding-bottom: 16rem;
     }
 
     &__top,
@@ -378,7 +427,7 @@
       &__title {
         @extend %description-12;
         color: $col-boulder;
-        margin-bottom: 24px;
+        margin-bottom: 10px;
       }
 
       &__item {
@@ -389,7 +438,7 @@
         transition: color 0.2s;
 
         // &::after {
-        //   background: $col-orange;
+        //   background: $col-red;
         //   content: "";
         //   display: block;
         //   height: 100%;
@@ -464,7 +513,7 @@
 
           @media (any-pointer: fine) {
             &:hover {
-              color: $col-orange;
+              color: $col-red;
             }
           }
         }
@@ -474,7 +523,7 @@
 
   &__contact {
     @include media(">tablet") {
-      padding-top: 16rem;
+      padding-top: 0rem;
     }
 
     .line-wrapper {
@@ -564,7 +613,7 @@
               display: inline-block;
               content: attr(data-content);
               white-space: nowrap;
-              color: $col-orange;
+              color: $col-red;
               transform: translateY(-100%);
               transition: transform 275ms ease;
             }
@@ -587,9 +636,9 @@
       @include media("<=phone") {
         max-width: 255px;
         width: 100%;
-        text-align: left;
-        margin-left: auto;
-        word-break: break-word;
+        position: center;
+        margin-center: auto;
+        //word-break: break-word;
       }
 
       .to-copy {
@@ -623,11 +672,13 @@
 
         @include media("<=tablet") {
           text-align: left;
+          margin: 10px;
+          max-width: 200px;
         }
 
         @media (any-pointer: fine) {
           &:hover {
-            color: $col-orange;
+            color: $col-red;
           }
         }
 
@@ -659,8 +710,9 @@
     }
 
     @include media("<=phone") {
-      max-width: 255px;
+      max-width: 40rem;
       width: 100%;
+      margin-center: auto;
     }
 
     &__left {
@@ -727,8 +779,7 @@
           }
 
           @include media("<=phone") {
-            max-width: 255px;
-            width: 100%;
+            position: center;
           }
 
           &__inner {
