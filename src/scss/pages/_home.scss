@@ -307,6 +307,13 @@
     }
   }
 
+.home__projects__project__skills {
+  @extend %description-12;
+  text-transform: uppercase;
+  color: $col-boulder;
+  margin-bottom: 2.4rem;
+}
+  
   &__content {
     //padding-top: 24rem;
     //padding-bottom: 24rem;
@@ -319,6 +326,13 @@
 
     @include media(">tablet") {
       text-align: center;
+    }
+
+    &__skills {
+      @extend %description-12;
+      text-transform: uppercase;
+      color: $col-boulder;
+      margin-bottom: 20%;
     }
 
     &__title {
