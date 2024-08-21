@@ -2932,10 +2932,10 @@ function _inheritsLoose(subClass, superClass) {
 }
 
 /*!
- * GSAP 3.12.4
+ * GSAP 3.12.5
  * https://gsap.com
  *
- * @license Copyright 2008-2023, GreenSock. All rights reserved.
+ * @license Copyright 2008-2024, GreenSock. All rights reserved.
  * Subject to the terms at https://gsap.com/standard-license or for
  * Club GSAP members, the agreement issued with that membership.
  * @author: Jack Doyle, jack@greensock.com
@@ -3814,10 +3814,11 @@ var _config = exports._config = {
   _quickTween,
   _registerPluginQueue = [],
   _createPlugin = function _createPlugin(config) {
-    if (_windowExists() && config) {
-      // edge case: some build tools may pass in a null/undefined value
-      config = !config.name && config["default"] || config; //UMD packaging wraps things oddly, so for example MotionPathHelper becomes {MotionPathHelper:MotionPathHelper, default:MotionPathHelper}.
+    if (!config) return;
+    config = !config.name && config["default"] || config; // UMD packaging wraps things oddly, so for example MotionPathHelper becomes {MotionPathHelper:MotionPathHelper, default:MotionPathHelper}.
 
+    if (_windowExists() || config.headless) {
+      // edge case: some build tools may pass in a null/undefined value
       var name = config.name,
         isFunc = _isFunction(config),
         Plugin = name && !isFunc && config.init ? function () {
@@ -3858,7 +3859,7 @@ var _config = exports._config = {
       _addGlobal(name, Plugin);
       config.register && config.register(gsap, Plugin, PropTween);
     } else {
-      config && _registerPluginQueue.push(config);
+      _registerPluginQueue.push(config);
     }
   },
   /*
@@ -4073,7 +4074,7 @@ var _config = exports._config = {
           dispatch,
           time,
           frame;
-        elapsed > _lagThreshold && (_startTime += elapsed - _adjustedLag);
+        (elapsed > _lagThreshold || elapsed < 0) && (_startTime += elapsed - _adjustedLag);
         _lastUpdate += elapsed;
         time = _lastUpdate - _startTime;
         overlap = time - _nextTime;
@@ -4110,9 +4111,9 @@ var _config = exports._config = {
             _globals.gsap = gsap;
             (_win.gsapVersions || (_win.gsapVersions = [])).push(gsap.version);
             _install(_installScope || _win.GreenSockGlobals || !_win.gsap && _win || {});
-            _raf = _win.requestAnimationFrame;
             _registerPluginQueue.forEach(_createPlugin);
           }
+          _raf = typeof requestAnimationFrame !== "undefined" && requestAnimationFrame;
           _id && _self.sleep();
           _req = _raf || function (f) {
             return setTimeout(f, _nextTime - _self.time * 1000 + 1 | 0);
@@ -4122,7 +4123,7 @@ var _config = exports._config = {
         }
       },
       sleep: function sleep() {
-        (_raf ? _win.cancelAnimationFrame : clearTimeout)(_id);
+        (_raf ? cancelAnimationFrame : clearTimeout)(_id);
         _tickerActive = 0;
         _req = _emptyFunc;
       },
@@ -5822,8 +5823,8 @@ var Tween = exports.TweenLite = exports.TweenMax = exports.Tween = /*#__PURE__*/
         if (iteration !== prevIteration) {
           timeline && this._yEase && _propagateYoyoEase(timeline, isYoyo); //repeatRefresh functionality
 
-          if (this.vars.repeatRefresh && !isYoyo && !this._lock && this._time !== dur && this._initted) {
-            // this._time will === dur when we render at EXACTLY the end of an iteration. Without this condition, it'd often do the repeatRefresh render TWICE (again on the very next tick).
+          if (this.vars.repeatRefresh && !isYoyo && !this._lock && this._time !== cycleDuration && this._initted) {
+            // this._time will === cycleDuration when we render at EXACTLY the end of an iteration. Without this condition, it'd often do the repeatRefresh render TWICE (again on the very next tick).
             this._lock = force = 1; //force, otherwise if lazy is true, the _attemptInitTween() will return and we'll jump out and get caught bouncing on each tick.
 
             this.render(_roundPrecise(cycleDuration * iteration), true).invalidate()._lock = 0;
@@ -5868,7 +5869,7 @@ var Tween = exports.TweenLite = exports.TweenMax = exports.Tween = /*#__PURE__*/
         pt.r(ratio, pt.d);
         pt = pt._next;
       }
-      timeline && timeline.render(totalTime < 0 ? totalTime : !time && isYoyo ? -_tinyNum : timeline._dur * timeline._ease(time / this._dur), suppressEvents, force) || this._startAt && (this._zTime = totalTime);
+      timeline && timeline.render(totalTime < 0 ? totalTime : timeline._dur * timeline._ease(time / this._dur), suppressEvents, force) || this._startAt && (this._zTime = totalTime);
       if (this._onUpdate && !suppressEvents) {
         isNegative && _rewindStartAt(this, totalTime, suppressEvents, force); //note: for performance reasons, we tuck this conditional logic inside less traveled areas (most tweens don't have an onUpdate). We'd just have it at the end before the onComplete, but the values should be updated before any onUpdate is called, so we ALSO put it here and then if it's not called, we do so later near the onComplete.
 
@@ -6375,6 +6376,7 @@ var MatchMedia = /*#__PURE__*/function () {
   function MatchMedia(scope) {
     this.contexts = [];
     this.scope = scope;
+    _context && _context.data.push(this);
   }
   var _proto6 = MatchMedia.prototype;
   _proto6.add = function add(conditions, func, scope) {
@@ -6728,7 +6730,7 @@ var gsap = exports.default = exports.gsap = _gsap.registerPlugin({
   }
 }, _buildModifierPlugin("roundProps", _roundModifier), _buildModifierPlugin("modifiers"), _buildModifierPlugin("snap", snap)) || _gsap; //to prevent the core plugins from being dropped via aggressive tree shaking, we must include them in the variable declaration in this way.
 
-Tween.version = Timeline.version = gsap.version = "3.12.4";
+Tween.version = Timeline.version = gsap.version = "3.12.5";
 _coreReady = 1;
 _windowExists() && _wake();
 var Power0 = exports.Power0 = _easeMap.Power0,
@@ -6760,10 +6762,10 @@ Object.defineProperty(exports, "__esModule", {
 exports.default = exports.checkPrefix = exports._getBBox = exports._createElement = exports.CSSPlugin = void 0;
 var _gsapCore = require("./gsap-core.js");
 /*!
- * CSSPlugin 3.12.4
+ * CSSPlugin 3.12.5
  * https://gsap.com
  *
- * Copyright 2008-2023, GreenSock. All rights reserved.
+ * Copyright 2008-2024, GreenSock. All rights reserved.
  * Subject to the terms at https://gsap.com/standard-license or for
  * Club GSAP members, the agreement issued with that membership.
  * @author: Jack Doyle, jack@greensock.com
@@ -8308,10 +8310,10 @@ function _createClass(Constructor, protoProps, staticProps) {
 }
 
 /*!
- * Observer 3.12.4
+ * Observer 3.12.5
  * https://gsap.com
  *
- * @license Copyright 2008-2023, GreenSock. All rights reserved.
+ * @license Copyright 2008-2024, GreenSock. All rights reserved.
  * Subject to the terms at https://gsap.com/standard-license or for
  * Club GSAP members, the agreement issued with that membership.
  * @author: Jack Doyle, jack@greensock.com
@@ -8362,9 +8364,9 @@ var gsap,
   _isViewport = exports._isViewport = function _isViewport(el) {
     return !!~_root.indexOf(el);
   },
-  _addListener = function _addListener(element, type, func, nonPassive, capture) {
+  _addListener = function _addListener(element, type, func, passive, capture) {
     return element.addEventListener(type, func, {
-      passive: !nonPassive,
+      passive: passive !== false,
       capture: !!capture
     });
   },
@@ -8592,6 +8594,7 @@ var Observer = exports.default = exports.Observer = /*#__PURE__*/function () {
       self = this,
       prevDeltaX = 0,
       prevDeltaY = 0,
+      passive = vars.passive || !preventDefault,
       scrollFuncX = _getScrollFunc(target, _horizontal),
       scrollFuncY = _getScrollFunc(target, _vertical),
       scrollX = scrollFuncX(),
@@ -8710,7 +8713,7 @@ var Observer = exports.default = exports.Observer = /*#__PURE__*/function () {
         self._vx.reset(); // otherwise the t2 may be stale if the user touches and flicks super fast and releases in less than 2 requestAnimationFrame ticks, causing velocity to be 0.
 
         self._vy.reset();
-        _addListener(isNormalizer ? target : ownerDoc, _eventTypes[1], _onDrag, preventDefault, true);
+        _addListener(isNormalizer ? target : ownerDoc, _eventTypes[1], _onDrag, passive, true);
         self.deltaX = self.deltaY = 0;
         onPress && onPress(self);
       },
@@ -8729,7 +8732,6 @@ var Observer = exports.default = exports.Observer = /*#__PURE__*/function () {
           self._vy.reset(); //if (preventDefault && allowClicks && self.isPressed) { // check isPressed because in a rare edge case, the inputObserver in ScrollTrigger may stopPropagation() on the press/drag, so the onRelease may get fired without the onPress/onDrag ever getting called, thus it could trigger a click to occur on a link after scroll-dragging it.
 
           if (preventDefault && allowClicks) {
-            // check isPressed because in a rare edge case, the inputObserver in ScrollTrigger may stopPropagation() on the press/drag, so the onRelease may get fired without the onPress/onDrag ever getting called, thus it could trigger a click to occur on a link after scroll-dragging it.
             gsap.delayedCall(0.08, function () {
               // some browsers (like Firefox) won't trust script-generated clicks, so if the user tries to click on a video to play it, for example, it simply won't work. Since a regular "click" event will most likely be generated anyway (one that has its isTrusted flag set to true), we must slightly delay our script-generated click so that the "real"/trusted one is prioritized. Remember, when there are duplicate events in quick succession, we suppress all but the first one. Some browsers don't even trigger the "real" one at all, so our synthetic one is a safety valve that ensures that no matter what, a click event does get dispatched.
               if (_getTime() - onClickTime > 300 && !e.defaultPrevented) {
@@ -8813,13 +8815,13 @@ var Observer = exports.default = exports.Observer = /*#__PURE__*/function () {
     self.enable = function (e) {
       if (!self.isEnabled) {
         _addListener(isViewport ? ownerDoc : target, "scroll", _onScroll);
-        type.indexOf("scroll") >= 0 && _addListener(isViewport ? ownerDoc : target, "scroll", onScroll, preventDefault, capture);
-        type.indexOf("wheel") >= 0 && _addListener(target, "wheel", _onWheel, preventDefault, capture);
+        type.indexOf("scroll") >= 0 && _addListener(isViewport ? ownerDoc : target, "scroll", onScroll, passive, capture);
+        type.indexOf("wheel") >= 0 && _addListener(target, "wheel", _onWheel, passive, capture);
         if (type.indexOf("touch") >= 0 && _isTouch || type.indexOf("pointer") >= 0) {
-          _addListener(target, _eventTypes[0], _onPress, preventDefault, capture);
+          _addListener(target, _eventTypes[0], _onPress, passive, capture);
           _addListener(ownerDoc, _eventTypes[2], _onRelease);
           _addListener(ownerDoc, _eventTypes[3], _onRelease);
-          allowClicks && _addListener(target, "click", clickCapture, false, true);
+          allowClicks && _addListener(target, "click", clickCapture, true, true);
           onClick && _addListener(target, "click", _onClick);
           onGestureStart && _addListener(ownerDoc, "gesturestart", _onGestureStart);
           onGestureEnd && _addListener(ownerDoc, "gestureend", _onGestureEnd);
@@ -8883,7 +8885,7 @@ var Observer = exports.default = exports.Observer = /*#__PURE__*/function () {
   }]);
   return Observer;
 }();
-Observer.version = "3.12.4";
+Observer.version = "3.12.5";
 Observer.create = function (vars) {
   return new Observer(vars);
 };
@@ -8906,10 +8908,10 @@ Object.defineProperty(exports, "__esModule", {
 exports.default = exports.ScrollTrigger = void 0;
 var _Observer = require("./Observer.js");
 /*!
- * ScrollTrigger 3.12.4
+ * ScrollTrigger 3.12.5
  * https://gsap.com
  *
- * @license Copyright 2008-2023, GreenSock. All rights reserved.
+ * @license Copyright 2008-2024, GreenSock. All rights reserved.
  * Subject to the terms at https://gsap.com/standard-license or for
  * Club GSAP members, the agreement issued with that membership.
  * @author: Jack Doyle, jack@greensock.com
@@ -9694,6 +9696,7 @@ var gsap,
         change1 = change1 || scrollTo - initialValue;
         tween && tween.kill();
         vars[prop] = scrollTo;
+        vars.inherit = false;
         vars.modifiers = modifiers;
         modifiers[prop] = function () {
           return checkForInterruption(initialValue + change1 * tween.ratio + change2 * tween.ratio * tween.ratio);
@@ -9843,6 +9846,7 @@ var ScrollTrigger = exports.default = exports.ScrollTrigger = /*#__PURE__*/funct
         scrubTween ? scrubTween.duration(value) : scrubTween = gsap.to(animation, {
           ease: "expo",
           totalProgress: "+=0",
+          inherit: false,
           duration: scrubSmooth,
           paused: true,
           onComplete: function onComplete() {
@@ -9894,12 +9898,16 @@ var ScrollTrigger = exports.default = exports.ScrollTrigger = /*#__PURE__*/funct
             velocity = refreshedRecently ? 0 : (totalProgress - snap2) / (_getTime() - _time2) * 1000 || 0,
             change1 = gsap.utils.clamp(-progress, 1 - progress, _abs(velocity / 2) * velocity / 0.185),
             naturalEnd = progress + (snap.inertia === false ? 0 : change1),
-            endValue = _clamp(0, 1, snapFunc(naturalEnd, self)),
-            endScroll = Math.round(start + endValue * change),
+            endValue,
+            endScroll,
             _snap = snap,
             onStart = _snap.onStart,
             _onInterrupt = _snap.onInterrupt,
             _onComplete = _snap.onComplete;
+          endValue = snapFunc(naturalEnd, self);
+          _isNumber(endValue) || (endValue = naturalEnd); // in case the function didn't return a number, fall back to using the naturalEnd
+
+          endScroll = Math.round(start + endValue * change);
           if (scroll <= end && scroll >= start && endScroll !== scroll) {
             if (tween && !tween._initted && tween.data <= _abs(endScroll - scroll)) {
               // there's an overlapping snap! So we must figure out which one is closer and let that tween live.
@@ -9919,8 +9927,10 @@ var ScrollTrigger = exports.default = exports.ScrollTrigger = /*#__PURE__*/funct
               onComplete: function onComplete() {
                 self.update();
                 lastSnap = scrollFunc();
-                scrubTween && animation && animation.progress(endValue); // the resolution of the scrollbar is limited, so we should correct the scrubbed animation's playhead at the end to match EXACTLY where it was supposed to snap
-
+                if (animation) {
+                  // the resolution of the scrollbar is limited, so we should correct the scrubbed animation's playhead at the end to match EXACTLY where it was supposed to snap
+                  scrubTween ? scrubTween.resetTo("totalProgress", endValue, animation._tTime / animation._tDur) : animation.progress(endValue);
+                }
                 snap1 = snap2 = animation && !isToggle ? animation.totalProgress() : self.progress;
                 onSnapComplete && onSnapComplete(self);
                 _onComplete && _onComplete(self);
@@ -10206,6 +10216,9 @@ var ScrollTrigger = exports.default = exports.ScrollTrigger = /*#__PURE__*/funct
             });
           }
           useFixedPosition && scrollFunc(prevScroll);
+        } else {
+          i = _getSize(pin, direction);
+          i && spacer.style.flexBasis !== "auto" && (spacer.style.flexBasis = i + _px);
         }
         if (useFixedPosition) {
           override = {
@@ -10277,7 +10290,7 @@ var ScrollTrigger = exports.default = exports.ScrollTrigger = /*#__PURE__*/funct
       _refreshing = 0;
       animation && isToggle && (animation._initted || prevAnimProgress) && animation.progress() !== prevAnimProgress && animation.progress(prevAnimProgress || 0, true).render(animation.time(), true, true); // must force a re-render because if saveStyles() was used on the target(s), the styles could have been wiped out during the refresh().
 
-      if (isFirstRefresh || prevProgress !== self.progress || containerAnimation) {
+      if (isFirstRefresh || prevProgress !== self.progress || containerAnimation || invalidateOnRefresh) {
         // ensures that the direction is set properly (when refreshing, progress is set back to 0 initially, then back again to wherever it needs to be) and that callbacks are triggered.
         animation && !isToggle && animation.totalProgress(containerAnimation && start < -0.001 && !prevProgress ? gsap.utils.normalize(start, end, 0) : prevProgress, true); // to avoid issues where animation callbacks like onStart aren't triggered.
 
@@ -10349,7 +10362,13 @@ var ScrollTrigger = exports.default = exports.ScrollTrigger = /*#__PURE__*/funct
         }
       } // anticipate the pinning a few ticks ahead of time based on velocity to avoid a visual glitch due to the fact that most browsers do scrolling on a separate thread (not synced with requestAnimationFrame).
 
-      anticipatePin && !clipped && pin && !_refreshing && !_startup && _lastScrollTime && start < scroll + (scroll - scroll2) / (_getTime() - _time2) * anticipatePin && (clipped = 0.0001);
+      if (anticipatePin && pin && !_refreshing && !_startup && _lastScrollTime) {
+        if (!clipped && start < scroll + (scroll - scroll2) / (_getTime() - _time2) * anticipatePin) {
+          clipped = 0.0001;
+        } else if (clipped === 1 && end > scroll + (scroll - scroll2) / (_getTime() - _time2) * anticipatePin) {
+          clipped = 0.9999;
+        }
+      }
       if (clipped !== prevProgress && self.enabled) {
         isActive = self.isActive = !!clipped && clipped < 1;
         wasActive = !!prevProgress && prevProgress < 1;
@@ -10634,6 +10653,7 @@ var ScrollTrigger = exports.default = exports.ScrollTrigger = /*#__PURE__*/funct
         ScrollTrigger.isTouch = _Observer.Observer.isTouch;
         _fixIOSBug = _Observer.Observer.isTouch && /(iPad|iPhone|iPod|Mac)/g.test(navigator.userAgent); // since 2017, iOS has had a bug that causes event.clientX/Y to be inaccurate when a scroll occurs, thus we must alternate ignoring every other touchmove event to work around it. See https://bugs.webkit.org/show_bug.cgi?id=181954 and https://codepen.io/GreenSock/pen/ExbrPNa/087cef197dc35445a0951e8935c41503
 
+        _ignoreMobileResize = _Observer.Observer.isTouch === 1;
         _addListener(_win, "wheel", _onScroll); // mostly for 3rd party smooth scrolling libraries.
 
         _root = [_win, _doc, _docEl, _body];
@@ -10773,7 +10793,7 @@ var ScrollTrigger = exports.default = exports.ScrollTrigger = /*#__PURE__*/funct
   };
   return ScrollTrigger;
 }();
-ScrollTrigger.version = "3.12.4";
+ScrollTrigger.version = "3.12.5";
 ScrollTrigger.saveStyles = function (targets) {
   return targets ? _toArray(targets).forEach(function (target) {
     // saved styles are recorded in a consecutive alternating Array, like [element, cssText, transform attribute, cache, matchMedia, ...]
@@ -11109,6 +11129,7 @@ var _clampScrollAndGetDurationMultiplier = function _clampScrollAndGetDurationMu
     tween = gsap.to(self, {
       ease: "power4",
       paused: true,
+      inherit: false,
       scrollX: normalizeScrollX ? "+=0.1" : "+=0",
       scrollY: "+=0.1",
       modifiers: {
@@ -12224,12 +12245,12 @@ var _gsap = _interopRequireDefault(require("gsap"));
 var _ScrollTrigger = require("gsap/ScrollTrigger");
 var _each = _interopRequireDefault(require("lodash/each"));
 var _index = require("./utils/index");
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+function _interopRequireDefault(e) { return e && e.__esModule ? e : { default: e }; }
 function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
-function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : String(i); }
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
 function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 // import Home from "./pages/home";
 
@@ -12275,7 +12296,7 @@ var Home = exports.default = /*#__PURE__*/function () {
     this.homeAnimations();
     this.homeActions();
   }
-  _createClass(Home, [{
+  return _createClass(Home, [{
     key: "homeActions",
     value: function homeActions() {
       var _this = this;
@@ -12409,7 +12430,6 @@ var Home = exports.default = /*#__PURE__*/function () {
       });
     }
   }]);
-  return Home;
 }();
 new Home(scroll);
 },{"locomotive-scroll":"../node_modules/locomotive-scroll/dist/locomotive-scroll.esm.js","gsap":"../node_modules/gsap/index.js","gsap/ScrollTrigger":"../node_modules/gsap/ScrollTrigger.js","lodash/each":"../node_modules/lodash/each.js","./utils/index":"js/utils/index.js"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
@@ -12437,7 +12457,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "41953" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "34767" + '/');
   ws.onmessage = function (event) {
     checkedAssets = {};
     assetsToAccept = [];
